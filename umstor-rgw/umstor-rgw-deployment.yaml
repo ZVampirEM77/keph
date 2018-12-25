@@ -1,0 +1,42 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: umstor-rgw
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      role: object-gateway
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+
+  template:
+    metadata:
+      labels:
+        role: object-gateway
+    spec:
+      imagePullSecrets:
+      - name: umregsecret2
+      volumes:
+      - name: persistent-storage1
+        hostPath:
+          path: /etc/ceph
+      - name: persistent-storage2
+        hostPath:
+          path: /var/lib/ceph/
+      hostNetwork: true
+      containers:
+      - name: umstor-rgw
+        image: 106.75.115.10:28081/ceph/daemon:luminous-12.2.10
+        imagePullPolicy: IfNotPresent 
+        volumeMounts:
+        - mountPath: /etc/ceph
+          name: persistent-storage1
+        - mountPath: /var/lib/ceph/
+          name: persistent-storage2
+        args: ["rgw"]
+        ports:
+        - containerPort: 8080 
